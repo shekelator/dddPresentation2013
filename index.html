@@ -1,0 +1,100 @@
+<html>
+	<head>
+		<title>SkillsMatter DDD eXchange NYC 2013</title>
+		<meta name="description">Lessons for us from the DDD eXchange</meta>
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="reveal.js/css/reveal.min.css">
+		<link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="reveal.js/lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+	</head>
+	<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<h1>SkillsMatter DDD eXchange NYC 2013</h1>
+				<h3>Lessons...and, WTF is DDD anyway?</h3>
+				<p>
+					<small>by <a href="mailto:dnichol@protk.com">Dave Nichol</a></small>
+				</p>
+			</section>
+
+			<section>
+				<h2>Domain Driven Design</h2>
+				<ul>
+					<li class="fragment">For most software projects, the primary focus should be on the domain and domain logic</li>
+					<li class="fragment">Complex domain designs should be basd on a <strong>model</strong></li>
+					<li class="fragment">Explore models in <i>creative collaboration between business stakeholders and implementers</i></li>
+					<li class="fragment">Speak a <strong>ubiquitous language</strong> within an explicitly <strong>bounded context</strong></li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>So, this model...</h2>
+				<ul>
+					<li class="fragment">Is a system of abstractions</li>
+					<li class="fragment">Is a combination of diagrams and text</li>
+					<li class="fragment">Can be in whatever format(s) make sense</li>
+					<li class="fragment">Should make sense to both developers and stakeholders!</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>Wat?</h2>
+				<p><a href="http://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215/"><img src="images/blue-book.jpg"/></a></p>
+				<p>Just read the book:</p>
+				<i><a href="http://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215/">Domain-Driven Design: Tackling Complexity in the Heart of Software</a></i> by Eric Evans
+			</section>
+
+			<section>
+				<h2>But srsly...</h2>
+				<p>"DDD: The Book" also includes patterns and techniques for building software that promote cleanly expressing and maintaining the integrity of the domain model:</p>
+				<ul>
+					<li class="fragment">Layered architecture</li>
+					<li class="fragment">Repository</li>
+					<li class="fragment">Aggregates</li>
+					<li class="fragment">Ubiquitous language</li>
+					<li class="fragment">Bounded context</li>
+					<li class="fragment"><i>...and many more!</i></li>
+				</ul>
+			</section>
+
+		</div>
+	</div>
+
+	<script type="text/javascript" src="reveal.js/lib/js/head.min.js"></script>
+	<script type="text/javascript" src="reveal.js/js/reveal.min.js"></script>
+	<script type="text/javascript">
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: true,
+
+			theme: Reveal.getQueryHash().theme,
+			transition: Reveal.getQueryHash().transition || 'default',
+
+			dependencies: [
+				{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); }},
+				{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; }},
+				{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; }}
+			]
+		});
+	</script>
+	
+</body>
+
+</html>
