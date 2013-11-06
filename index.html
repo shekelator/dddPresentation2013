@@ -19,22 +19,39 @@
 			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
 		</script>
 
+		<style>
+			.reveal section img.transparent-image {
+				border: none;
+				background: none;
+				box-shadow: none;
+			}
+			.reveal section img.big-image {
+				height: 75%;
+			}
+			.reveal section span.domain {
+				display: block;
+				background-color: brown;
+			}
+		</style>
 	</head>
 	<body>
 	<div class="reveal">
 		<div class="slides">
 			<section>
-				<h1>SkillsMatter DDD eXchange NYC 2013</h1>
-				<h3>Lessons...and, WTF is DDD anyway?</h3>
+				<h1>Domain Driven Design</h1>
+				<h3>or...</h3>
+				<h2>Lessons from the SkillsMatter DDD eXchange NYC 2013</h1>
+				<h3>or...</h3>
+				<h3>WTF is DDD anyway?</h3>
 				<p>
-					<small>by <a href="mailto:dnichol@protk.com">Dave Nichol</a></small>
+					<small>by <a href="mailto:dnichol@protk.com">Dave Nichol</a> and friends</small>
 				</p>
 			</section>
 
 			<section>
 				<h2>Domain Driven Design</h2>
 				<ul>
-					<li class="fragment">For most software projects, the primary focus should be on the domain and domain logic</li>
+					<li class="fragment">For most software projects, the primary focus should be on the <i>domain</i> and domain logic</li>
 					<li class="fragment">Complex domain designs should be based on a <strong>model</strong></li>
 					<li class="fragment">Explore models in <i>creative collaboration between business stakeholders and implementers</i></li>
 					<li class="fragment">Speak a <strong>ubiquitous language</strong> within an explicitly <strong>bounded context</strong></li>
@@ -48,14 +65,27 @@
 					<li class="fragment">Is a combination of diagrams and text</li>
 					<li class="fragment">Can be in whatever format(s) make sense</li>
 					<li class="fragment">Should make sense to both developers and stakeholders!</li>
-					<li class="fragment">Will likely change over time</li>
+					<li class="fragment">Will change over time</li>
 				</ul>
 			</section>
 
 			<section>
-				<h2>More important</h2>
-				<p>...than the model as an artifact is <i>modeling as a continual process</i> of building and refining that model over time (with the stakeholders!) to add detail and <q>&ldquo;make implicit concepts explicit.&rdquo;</p>
+				<h3>The Domain Model is central to the relationship between the software and the rest of the organization</h3>
+				<img src="images/model-relationships.png" class="transparent-image"/>
 			</section>
+			<section>
+				<h2>More important</h2>
+				<p>than the <i>model as an artifact</i> is</p>
+				<h3>modeling as a continual process</h3>
+				<p>of building and refining the model over time to add detail and</p>
+				<p><q>&ldquo;make implicit concepts explicit.&rdquo;</q></p>
+			</section>
+
+			<section>
+				<img src="images/model-exploration-whirlpool.png" class="transparent-image big-image"/>
+				<p class="fragment">Note that modeling is <b>NOT</b> a development exercise&mdash;rather, it is a collaborative process that developers do <q>with</q> stakeholders.</p>
+			</section>
+
 			<section>
 				<h2>Wat?</h2>
 				<p><a href="http://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215/"><img src="images/blue-book.jpg"/></a></p>
@@ -65,7 +95,7 @@
 
 			<section>
 				<h2>But srsly...</h2>
-				<p>"DDD: The Book" also includes patterns and techniques for building software that promote cleanly expressing and maintaining the integrity of the domain model:</p>
+				<p>DDD also defines some sweet patterns and techniques</p>
 				<ul>
 					<li class="fragment">Layered architecture</li>
 					<li class="fragment">Repository</li>
@@ -108,21 +138,102 @@
 			</section>
 
 			<section>
+				<h2>Our code doesn't express our model clearly enough</h2>
+			</section>
+
+			<section>
+				<h3>This code mixes domain/application layers:</h3>
+				<p class="fragment"><small>(hint: look for domain logic)</small></p>
+				<pre>
+					<code>
+[NoCache]
+[HttpPost]
+public JsonNetResult UploadPdf(int caseEntityId, string name, int maxSize)
+{
+    var uploadedFile = Request.Files[0];
+    try
+    {
+        if (!CaseFileManagerHelperMethods.IsFileAPdf(uploadedFile.InputStream))
+        {
+            _log.Error(string.Format("Uploaded file {0} is not a valid pdf.", name));
+            CaseFileEntity caseFileEntity = new CaseFileEntity {Error = "This file is not a valid Pdf."};
+            return new JsonNetResult { Data = caseFileEntity };
+        }
+       
+        if (uploadedFile.InputStream.Length > maxSize)
+        {
+            const int maxAllowableUploadSize = 15; // 15 MB
+
+            _log.Error(string.Format("Uploaded file {0} exceeds maximum size requirement of {1}", name, maxAllowableUploadSize));
+            string errorDescription = string.Format("The file you are trying to upload exceeds our size limit of {0}MB. Please contact your software company for instructions on how to reduce the size of your file.", maxAllowableUploadSize);
+            CaseFileEntity caseFileEntity = new CaseFileEntity { Error = errorDescription };
+            return new JsonNetResult { Data = caseFileEntity };
+        }
+
+        return new JsonNetResult { Data = SaveCaseFile(uploadedFile, caseEntityId) };
+    }
+    catch (Exception ex)
+    {
+        _log.Error(string.Format("Exception occurred in CaseFileManagerController.UploadPdf(): {0}", ex));
+        CaseFileEntity caseFileEntity = new CaseFileEntity {Error = "IO error."};
+        return new JsonNetResult { Data = caseFileEntity };
+    }
+}
+					</code>
+				</pre>
+			</section>
+
+			<section>
+				<h3>Put domain logic where it belongs:</h3>
+				<p class="fragment"><small>(hint: elsewhere)</small></p>
+				<pre>
+					<code>
+[NoCache]
+[HttpPost]
+public JsonNetResult UploadPdf(int caseEntityId, string name, int maxSize)
+{
+    var uploadedFile = Request.Files[0];
+    try
+    {
+    	var result = _caseFileManager.UploadPdf(uploadedFile, caseEntityId, maxSize);
+    }
+    catch (Exception ex)
+    {
+        _log.Error(string.Format("Exception occurred in CaseFileManagerController.UploadPdf(): {0}", ex));
+        throw new WebException();
+    }
+
+    return new JsonNetResult { Data = result };
+}
+					</code>
+				</pre>
+			</section>
+
+			<section>
 				<h2>Please see also</h2>
+				<small>
 				<ul>
 					<li><i><a href="http://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215/">Domain-Driven Design: Tackling Complexity in the Heart of Software</a></i></li>
 					<li><i><a href="http://dddcommunity.org">DDD community site</a></i></li>
 					<li>Eric Evans on <a href="http://www.infoq.com/presentations/model-to-work-evans">Domain-Driven Design: Putting the Model to Work</a></li>
+					<li>David Laribee in MSDN Magazine: <a href="http://msdn.microsoft.com/en-us/magazine/dd419654.aspx">An Introduction To Domain-Driven Design</a></li>
 					<li>Talks from the conference
 						<ul>
-							<li><a href="http://skillsmatter.com/podcast/design-architecture/greg-young-4081">Greg Young on Document-Based Messaging and Analysis</a></li>
-							<li><a href="http://www.slideshare.net/ziobrando/model-storming">Alberto Brandolini on Model Storming</a></li>
+							<li>Greg Young on <a href="http://skillsmatter.com/podcast/design-architecture/greg-young-4081">Document-Based Messaging and Analysis</a></li>
+							<li>Alberto Brandolini on <a href="http://www.slideshare.net/ziobrando/model-storming">Model Storming</a></li>
 							<li>Eric Evans: <a href="http://www.youtube.com/watch?v=7MaYeudL9yo">Keynote on DDD retrospective and case study</a></li>
 							<li>Robert Smallshire on <a href="http://skillsmatter.com/podcast/design-architecture/a-ddd-experience-report-book-clubs-better-designs-and-organizational-harmony">How DDD became an essential ingredient for competitive software in the energy sector</a></li>
 							<li>Vaughn Vernon on <a href="http://skillsmatter.com/podcast/design-architecture/vaughn-vernon-4259">Reactive DDD with Scala and Akka</a></li>
 						</ul>
 					</li>
 				</ul>
+			</small>
+		</section>
+
+		<section>
+			<p>To be continued...</p>
+		</section>
+
 		</div>
 	</div>
 
@@ -139,10 +250,10 @@
 			transition: Reveal.getQueryHash().transition || 'default',
 
 			dependencies: [
-				{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
-				{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); }},
-				{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; }},
-				{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; }}
+				{ src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: 'reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); }},
+				{ src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; }},
+				{ src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; }}
 			]
 		});
 	</script>
