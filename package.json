@@ -1,0 +1,9 @@
+{
+	"name": "dddPresentation2013",
+	"description": "A Presentation on DDD",
+	"version": "0.0.2",
+	"private": true,
+	"dependencies": {
+		"express": "3.4.4"
+	}
+}
